@@ -1773,7 +1773,7 @@ function renderStats(){
 function setSleep(min,el){
   if(sleepTO)clearTimeout(sleepTO);if(sleepIv)clearInterval(sleepIv);sleepTO=null;sleepIv=null;
   document.querySelectorAll('.slp-btn').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
+  if(el)el.classList.add('on');
   if(!min){document.getElementById('sleepDisp').textContent='—';showToast('😴 Kapalı');return;}
   const end=Date.now()+min*60000;
   sleepTO=setTimeout(()=>{aud.pause();updPS(false);showToast('😴 Uyku devreye girdi');},min*60000);
@@ -1824,23 +1824,21 @@ document.addEventListener('keydown',e=>{
 
 /* ─── SEEK TOOLTIP ─── */
 (function(){
-  const _sw=document.getElementById('seekWrap');
   const tip=document.getElementById('seekTip');
   function showTip(e){
     if(!aud.duration||!isFinite(aud.duration))return;
-    const r=_sw.getBoundingClientRect();
+    const r=sw.getBoundingClientRect();
     const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
     const p=Math.max(0,Math.min(1,x/r.width));
-    const t=p*aud.duration;
-    tip.textContent=fmt(t);
+    tip.textContent=fmt(p*aud.duration);
     tip.style.left=(p*100)+'%';
     tip.classList.add('show');
   }
   function hideTip(){tip.classList.remove('show');}
-  _sw.addEventListener('mousemove',showTip);
-  _sw.addEventListener('mouseleave',hideTip);
-  _sw.addEventListener('touchmove',showTip,{passive:true});
-  _sw.addEventListener('touchend',hideTip);
+  sw.addEventListener('mousemove',showTip);
+  sw.addEventListener('mouseleave',hideTip);
+  sw.addEventListener('touchmove',showTip,{passive:true});
+  sw.addEventListener('touchend',hideTip);
 })();
 
 /* ─── AYDINLIK MOD ─── */
@@ -1864,7 +1862,11 @@ async function fetchLrc(title,artist){
   content.innerHTML='<div class="lrc-loading">⏳ Sözler aranıyor...</div>';
   try{
     const q=new URLSearchParams({track_name:title||'',artist_name:artist||''});
-    const res=await fetch(`https://lrclib.net/api/get?${q}`,{signal:AbortSignal.timeout(8000)});
+    const controller=new AbortController();
+    const toid=setTimeout(()=>controller.abort(),8000);
+    try{
+    const res=await fetch(`https://lrclib.net/api/get?${q}`,{signal:controller.signal});
+    clearTimeout(toid);
     if(!res.ok)throw new Error('not found');
     const data=await res.json();
     const raw=data.syncedLyrics||data.plainLyrics||'';
@@ -1879,6 +1881,7 @@ async function fetchLrc(title,artist){
     } else {
       content.innerHTML=raw.split('\n').map(l=>`<div class="lrc-line">${esc(l)||'♪'}</div>`).join('');
     }
+    }catch{clearTimeout(toid);content.innerHTML='<div class="lrc-loading">❌ Söz yüklenemedi</div>';}
   }catch{content.innerHTML='<div class="lrc-loading">❌ Söz yüklenemedi</div>';}
 }
 
@@ -1909,12 +1912,12 @@ function openSlpPop(){document.getElementById('slpPop').classList.add('show');}
 function closeSlpPop(){document.getElementById('slpPop').classList.remove('show');}
 function setSlpPop(min,el){
   document.querySelectorAll('.slp-box-btn').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');
-  // Ayarlar sayfasındaki butonlarla da senkronize et
+  if(el)el.classList.add('on');
   document.querySelectorAll('.slp-btn').forEach((b,i)=>{
     b.classList.toggle('on',[0,15,30,45,60,90][i]===min);
   });
-  setSleep(min,document.querySelectorAll('.slp-btn')[[0,15,30,45,60,90].indexOf(min)]);
+  const settingsIdx=[0,15,30,45,60,90].indexOf(min);
+  setSleep(min,settingsIdx>=0?document.querySelectorAll('.slp-btn')[settingsIdx]:null);
 }
 
 /* ─── SON POZİSYON KAYDET ─── */
@@ -1927,7 +1930,16 @@ function restorePos(){
     const p=JSON.parse(lsGet('mb4_pos')||'null');
     if(!p)return;
     const idx=queue.findIndex(t=>t.id===p.id);
-    if(idx>=0&&p.t>2){ci=idx;playIdx(idx,false);setTimeout(()=>{aud.currentTime=p.t;},600);}
+    if(idx<0||p.t<=2)return;
+    ci=idx;
+    const tr=queue[idx];
+    // Sadece UI güncelle, otomatik oynatma yapma
+    aud.src=tr.url;
+    aud.volume=vol;
+    aud.load();
+    aud.addEventListener('loadedmetadata',()=>{aud.currentTime=p.t;},{once:true});
+    updPlayerUI(tr);
+    updMS(tr);
   }catch{}
 }
 
