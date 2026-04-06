@@ -16,5 +16,21 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Müzik Çal",
+      "short_name": "Çal",
+      "description": "Müziği devam ettir",
+      "url": "./?action=play",
+      "icons": [{"src": "icon.svg", "sizes": "any"}]
+    },
+    {
+      "name": "Karıştır",
+      "short_name": "Karıştır",
+      "description": "Rastgele çal",
+      "url": "./?action=shuffle",
+      "icons": [{"src": "icon.svg", "sizes": "any"}]
+    }
+  ],
   "categories": ["music", "entertainment"]
 }

@@ -448,11 +448,89 @@ body{color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display
 .pwa-btn{background:linear-gradient(135deg,var(--p3),var(--b));color:#fff;border:none;
   border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;
   white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(139,92,246,.35)}
+
+/* SEEK TOOLTIP */
+.seek-tip{position:absolute;top:-28px;background:rgba(0,0,0,.8);color:#fff;
+  font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;
+  pointer-events:none;transform:translateX(-50%);opacity:0;transition:opacity .15s;
+  white-space:nowrap;z-index:10}
+.seek-tip.show{opacity:1}
+
+/* LYRICS PANEL */
+.lrc-panel{width:100%;background:var(--c1);border:1px solid var(--bd);
+  border-radius:15px;padding:14px;margin-bottom:10px;display:none;max-height:220px;overflow-y:auto}
+.lrc-panel.show{display:block}
+.lrc-line{font-size:13px;color:var(--t2);line-height:2;padding:0 4px;border-radius:6px;
+  transition:all .3s;cursor:pointer}
+.lrc-line.active{color:var(--t);font-weight:700;background:rgba(139,92,246,.12);font-size:14px}
+.lrc-loading{text-align:center;color:var(--t2);font-size:13px;padding:20px}
+
+/* SLEEP POPUP */
+.slp-pop{position:fixed;inset:0;z-index:600;display:none;align-items:flex-end;
+  justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px)}
+.slp-pop.show{display:flex}
+.slp-box{width:100%;max-width:430px;background:var(--c2);border-radius:22px 22px 0 0;
+  padding:18px 18px max(18px,var(--sb));animation:mup .3s cubic-bezier(.4,0,.2,1)}
+.slp-box-ttl{font-size:16px;font-weight:800;margin-bottom:14px;text-align:center}
+.slp-box-hdl{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 14px}
+.slp-box-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.slp-box-btn{padding:10px 18px;background:var(--c3);border:1.5px solid var(--bd);
+  border-radius:11px;color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;
+  transition:all .2s}
+.slp-box-btn.on{border-color:var(--p);color:var(--p2);background:rgba(139,92,246,.15)}
+.slp-remain{text-align:center;font-size:12px;color:var(--t2);margin-bottom:12px}
+.slp-remain b{color:var(--p2)}
+.slp-pop-close{width:100%;padding:12px;background:var(--c3);border:1px solid var(--bd);
+  border-radius:12px;color:var(--t);font-size:14px;font-weight:600;cursor:pointer}
+
+/* LIGHT MODE */
+:root[data-lm]{
+  --dark:#f0f0f8;--c1:#e8e8f4;--c2:#dcdcee;--c3:#cfcfe5;
+  --t:#1a1a2e;--t2:#5a5a7a;--bd:rgba(0,0,0,.12);--bd2:rgba(0,0,0,.2)}
+:root[data-lm] .bg{background:radial-gradient(ellipse at 20% 20%,rgba(139,92,246,.15) 0%,transparent 55%),
+  radial-gradient(ellipse at 80% 80%,rgba(109,40,217,.1) 0%,transparent 55%),#f0f0f8}
+:root[data-lm] .mini{background:rgba(240,240,248,.97)}
+:root[data-lm] .modal-ov{background:rgba(200,200,220,.7)}
+
+/* SW UPDATE BANNER */
+.sw-update-ban{position:fixed;top:calc(var(--st) + 62px);left:50%;transform:translateX(-50%);
+  z-index:900;background:linear-gradient(135deg,var(--p3),var(--b));
+  color:#fff;border-radius:12px;padding:10px 16px;display:none;
+  align-items:center;gap:10px;font-size:13px;font-weight:600;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:390px;width:calc(100% - 40px)}
+.sw-update-ban.show{display:flex}
+.sw-upd-btn{background:rgba(255,255,255,.25);border:none;border-radius:8px;
+  color:#fff;font-size:12px;font-weight:700;padding:5px 10px;cursor:pointer;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="bg"></div>
 <div class="toast" id="toast"></div>
+
+<!-- SW GÜNCELLEME BANNER -->
+<div class="sw-update-ban" id="swUpdBan">
+  <span style="flex:1">🆕 Yeni sürüm mevcut!</span>
+  <button class="sw-upd-btn" onclick="applySwUpdate()">Yenile</button>
+  <button class="sw-upd-btn" style="background:rgba(255,255,255,.12)" onclick="document.getElementById('swUpdBan').classList.remove('show')">✕</button>
+</div>
+
+<!-- SLEEP POPUP -->
+<div class="slp-pop" id="slpPop" onclick="if(event.target===this)closeSlpPop()">
+  <div class="slp-box">
+    <div class="slp-box-hdl"></div>
+    <div class="slp-box-ttl">😴 Uyku Zamanlayıcısı</div>
+    <div class="slp-box-btns">
+      <div class="slp-box-btn on" id="slpPopKapalı" onclick="setSlpPop(0,this)">Kapalı</div>
+      <div class="slp-box-btn" onclick="setSlpPop(15,this)">15 dk</div>
+      <div class="slp-box-btn" onclick="setSlpPop(30,this)">30 dk</div>
+      <div class="slp-box-btn" onclick="setSlpPop(45,this)">45 dk</div>
+      <div class="slp-box-btn" onclick="setSlpPop(60,this)">60 dk</div>
+      <div class="slp-box-btn" onclick="setSlpPop(90,this)">90 dk</div>
+    </div>
+    <div class="slp-remain">Kalan: <b id="slpRemain">—</b></div>
+    <button class="slp-pop-close" onclick="closeSlpPop()">Kapat</button>
+  </div>
+</div>
 
 <!-- CTX -->
 <div class="ctx" id="ctx">
@@ -617,8 +695,9 @@ body{color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display
         <div class="trk-album"  id="pAlbum"></div>
         <div class="spectrum"   id="spectrum"></div>
         <div class="seek-wrap"  id="seekWrap">
-          <div class="seek-track">
+          <div class="seek-track" style="position:relative">
             <div class="seek-fill" id="seekFill"><div class="seek-thumb"></div></div>
+            <div class="seek-tip" id="seekTip">0:00</div>
           </div>
           <div class="seek-times"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
         </div>
@@ -634,8 +713,10 @@ body{color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display
           <button class="eb" id="repeatBtn"  onclick="togRepeat()">🔁<span>Tekrar</span></button>
           <button class="eb" id="favBtn"     onclick="togFavCur()">♡<span>Favori</span></button>
           <button class="eb" id="eqBtn"      onclick="togEQ()">🎛<span>EQ</span></button>
-          <button class="eb"                 onclick="goTab('cfg',document.querySelectorAll('.tab')[3])">😴<span>Uyku</span></button>
+          <button class="eb"                 onclick="openSlpPop()">😴<span>Uyku</span></button>
+          <button class="eb" id="lrcBtn"    onclick="togLrc()">📄<span>Sözler</span></button>
         </div>
+        <div class="lrc-panel" id="lrcPanel"><div class="lrc-loading" id="lrcContent">📄 Şarkı çal, sözler yüklenir</div></div>
         <div class="eq-panel" id="eqPanel">
           <div class="eq-head">
             <span>🎛 Ekolayzer</span>
@@ -687,6 +768,7 @@ body{color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display
         <div class="set-row" onclick="togCfg('autoplay')"><div class="set-ico">🔄</div><div class="set-lbl">Otomatik Oynat</div><div class="tog" id="tog-autoplay"></div></div>
         <div class="set-row" onclick="togCfg('spectrum')"><div class="set-ico">📊</div><div class="set-lbl">Spektrum Görseli</div><div class="tog" id="tog-spectrum"></div></div>
         <div class="set-row" onclick="togCfg('dynbg')">  <div class="set-ico">🎨</div><div class="set-lbl">Dinamik Renk</div><div class="tog" id="tog-dynbg"></div></div>
+        <div class="set-row" onclick="togLightMode()">   <div class="set-ico">☀️</div><div class="set-lbl">Aydınlık Mod</div><div class="tog" id="tog-lm"></div></div>
       </div>
       <div class="set-sec">
         <div class="set-ttl">😴 Uyku Zamanlayıcısı</div>
@@ -944,6 +1026,9 @@ async function processFiles(files, append){
     const file = files[i];
     try{
       setScanTxt(`${i+1}/${total}: ${file.name.substring(0,25)}`);
+
+      // Büyük dosya uyarısı (>100MB)
+      if(file.size>100*1024*1024)showToast(`⚠️ ${file.name.substring(0,20)} çok büyük (${Math.round(file.size/1048576)}MB)`);
 
       // Skip duplicate files (same name and size)
       const fileKey = file.name + '|' + file.size;
@@ -1315,6 +1400,10 @@ function playIdx(i){
       renderLib();
       renderQ();
       startSpec();
+      // Sözler paneli açıksa yeni şarkı için yeniden yükle
+      if(document.getElementById('lrcPanel').classList.contains('show')){
+        _lrcLines=[];_lrcActive=-1;fetchLrc(tr.title,tr.artist);
+      }
     }).catch(e=>{
       console.warn(e);
       showToast('▶ Oynatmak için ekrana dokun');
@@ -1389,6 +1478,7 @@ function dynBg(url){
       r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
       document.documentElement.style.setProperty('--p3',`rgb(${r},${g},${b})`);
       document.getElementById('artGlow').style.background=`radial-gradient(circle,rgb(${r},${g},${b}) 0%,transparent 65%)`;
+      img.onload=null;img.src='';
     };
     img.src=url;
   }catch{}
@@ -1418,6 +1508,11 @@ aud.addEventListener('timeupdate',()=>{
   document.getElementById('mpFill').style.width=p+'%';
   document.getElementById('curTime').textContent=fmt(aud.currentTime);
   document.getElementById('durTime').textContent=fmt(aud.duration);
+  updLrc();
+  if(Math.round(aud.currentTime)%10===0)savePos();
+  // sleepDisp senkronizasyonu popup için
+  const sd=document.getElementById('slpRemain');
+  if(sd)sd.textContent=document.getElementById('sleepDisp').textContent;
 });
 aud.addEventListener('loadedmetadata',()=>{
   if(aud.duration&&isFinite(aud.duration))
@@ -1512,7 +1607,7 @@ function openCtx(i,btn){
   const fon=favs.has(ctxTr.id);
   document.getElementById('ctxFavIco').textContent=fon?'💔':'❤️';
   document.getElementById('ctxFavTxt').textContent=fon?'Favoriden Çıkar':'Favorilere Ekle';
-  setTimeout(()=>document.addEventListener('click',ctxOut,{once:true,capture:true}),0);
+  document.addEventListener('click',ctxOut,{once:true,capture:true});
 }
 function ctxOut(e){if(!document.getElementById('ctx').contains(e.target))document.getElementById('ctx').classList.remove('show');}
 function closeCtx(){document.getElementById('ctx').classList.remove('show');}
@@ -1615,7 +1710,6 @@ function playPl(i){
 function delPl(i){if(!confirm('Sil?'))return;pls.splice(i,1);savePls();renderPls();}
 function openCreatePl(){modalMode='create';modalX=null;document.getElementById('modalTtl').textContent='✨ Yeni Playlist';document.getElementById('modalInp').value='';document.getElementById('modalOv').classList.add('show');setTimeout(()=>document.getElementById('modalInp').focus(),320);}
 function openAddToPl(tr){modalMode='add';modalX=tr;document.getElementById('modalTtl').textContent='➕ Playliste Ekle';document.getElementById('modalInp').value='';document.getElementById('modalOv').classList.add('show');setTimeout(()=>document.getElementById('modalInp').focus(),320);}
-document.getElementById('modalOv').addEventListener('click',e=>{if(e.target===document.getElementById('modalOv'))closeModal();});
 function closeModal(){document.getElementById('modalOv').classList.remove('show');}
 function modalOk(){
   const name=document.getElementById('modalInp').value.trim();
@@ -1651,7 +1745,7 @@ function togEQ(){const p=document.getElementById('eqPanel');p.classList.toggle('
 
 /* ─── SETTINGS ─── */
 function renderCfg(){
-  ['autoplay','spectrum','dynbg'].forEach(k=>{
+  ['autoplay','spectrum','dynbg','lm'].forEach(k=>{
     const el=document.getElementById('tog-'+k);
     if(el)el.classList.toggle('on',!!cfg[k]);
   });
@@ -1686,6 +1780,173 @@ function setSleep(min,el){
   sleepTO=setTimeout(()=>{aud.pause();updPS(false);showToast('😴 Uyku devreye girdi');},min*60000);
   sleepIv=setInterval(()=>{const r=end-Date.now();if(r<=0){clearInterval(sleepIv);document.getElementById('sleepDisp').textContent='—';return;}document.getElementById('sleepDisp').textContent=`${Math.floor(r/60000)}:${Math.floor((r%60000)/1000).toString().padStart(2,'0')}`;},1000);
   showToast(`😴 ${min} dk sonra kapanır`);
+}
+
+/* ─── MİNİ PLAYER SWIPE TO DISMISS ─── */
+(function(){
+  const miniEl=document.getElementById('mini');
+  let sy=0,dy=0,drag=false;
+  miniEl.addEventListener('touchstart',e=>{
+    if(e.target.closest('.mc,.mp-prog'))return;
+    sy=e.touches[0].clientY;dy=0;drag=true;
+  },{passive:true});
+  miniEl.addEventListener('touchmove',e=>{
+    if(!drag)return;
+    dy=e.touches[0].clientY-sy;
+    if(dy>0)miniEl.style.transform=`translateY(${dy}px)`;
+  },{passive:true});
+  miniEl.addEventListener('touchend',()=>{
+    drag=false;
+    if(dy>60){
+      miniEl.style.transform='';
+      miniEl.classList.remove('show');
+      aud.pause();updPS(false);
+    } else {
+      miniEl.style.transform='';
+    }
+    dy=0;
+  });
+})();
+
+/* ─── ÇEVRİMDIŞI BİLDİRİMİ ─── */
+window.addEventListener('online', ()=>showToast('✅ İnternet bağlantısı geri geldi'));
+window.addEventListener('offline',()=>showToast('📵 Çevrimdışısınız'));
+
+/* ─── KLAVYE KISAYOLLARI ─── */
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(e.code==='Space'){e.preventDefault();togPP();}
+  else if(e.code==='ArrowRight'){e.preventDefault();skip(10);}
+  else if(e.code==='ArrowLeft') {e.preventDefault();skip(-10);}
+  else if(e.code==='ArrowUp')   {e.preventDefault();vol=Math.min(1,vol+.05);aud.volume=vol;document.getElementById('volFill').style.width=(vol*100)+'%';}
+  else if(e.code==='ArrowDown') {e.preventDefault();vol=Math.max(0,vol-.05);aud.volume=vol;document.getElementById('volFill').style.width=(vol*100)+'%';}
+});
+
+/* ─── SEEK TOOLTIP ─── */
+(function(){
+  const _sw=document.getElementById('seekWrap');
+  const tip=document.getElementById('seekTip');
+  function showTip(e){
+    if(!aud.duration||!isFinite(aud.duration))return;
+    const r=_sw.getBoundingClientRect();
+    const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    const p=Math.max(0,Math.min(1,x/r.width));
+    const t=p*aud.duration;
+    tip.textContent=fmt(t);
+    tip.style.left=(p*100)+'%';
+    tip.classList.add('show');
+  }
+  function hideTip(){tip.classList.remove('show');}
+  _sw.addEventListener('mousemove',showTip);
+  _sw.addEventListener('mouseleave',hideTip);
+  _sw.addEventListener('touchmove',showTip,{passive:true});
+  _sw.addEventListener('touchend',hideTip);
+})();
+
+/* ─── AYDINLIK MOD ─── */
+function togLightMode(){
+  const on=document.documentElement.hasAttribute('data-lm');
+  if(on){document.documentElement.removeAttribute('data-lm');cfg.lm=false;}
+  else{document.documentElement.setAttribute('data-lm','');cfg.lm=true;}
+  const el=document.getElementById('tog-lm');
+  if(el)el.classList.toggle('on',!on);
+  lsSet('mb4_cfg',JSON.stringify(cfg));
+  showToast(on?'🌙 Karanlık mod':'☀️ Aydınlık mod');
+}
+
+/* ─── ŞARKI SÖZLERİ (LRCLib) ─── */
+let _lrcLines=[];let _lrcActive=-1;
+
+async function fetchLrc(title,artist){
+  const panel=document.getElementById('lrcPanel');
+  const content=document.getElementById('lrcContent');
+  _lrcLines=[];_lrcActive=-1;
+  content.innerHTML='<div class="lrc-loading">⏳ Sözler aranıyor...</div>';
+  try{
+    const q=new URLSearchParams({track_name:title||'',artist_name:artist||''});
+    const res=await fetch(`https://lrclib.net/api/get?${q}`,{signal:AbortSignal.timeout(8000)});
+    if(!res.ok)throw new Error('not found');
+    const data=await res.json();
+    const raw=data.syncedLyrics||data.plainLyrics||'';
+    if(!raw){content.innerHTML='<div class="lrc-loading">😔 Söz bulunamadı</div>';return;}
+    if(data.syncedLyrics){
+      _lrcLines=raw.split('\n').filter(l=>l.trim()).map(l=>{
+        const m=l.match(/^\[(\d+):(\d+\.\d+)\](.*)/);
+        if(!m)return null;
+        return{t:parseInt(m[1])*60+parseFloat(m[2]),txt:m[3].trim()};
+      }).filter(Boolean);
+      content.innerHTML=_lrcLines.map((l,i)=>`<div class="lrc-line" id="lrc${i}" onclick="aud.currentTime=${l.t}">${esc(l.txt)||'♪'}</div>`).join('');
+    } else {
+      content.innerHTML=raw.split('\n').map(l=>`<div class="lrc-line">${esc(l)||'♪'}</div>`).join('');
+    }
+  }catch{content.innerHTML='<div class="lrc-loading">❌ Söz yüklenemedi</div>';}
+}
+
+function togLrc(){
+  const p=document.getElementById('lrcPanel');
+  p.classList.toggle('show');
+  document.getElementById('lrcBtn').classList.toggle('on',p.classList.contains('show'));
+  if(p.classList.contains('show')&&_lrcLines.length===0&&queue[ci]){
+    fetchLrc(queue[ci].title,queue[ci].artist);
+  }
+}
+
+function updLrc(){
+  if(!_lrcLines.length)return;
+  const cur=aud.currentTime;
+  let idx=-1;
+  for(let i=0;i<_lrcLines.length;i++){if(_lrcLines[i].t<=cur)idx=i;}
+  if(idx===_lrcActive)return;
+  _lrcActive=idx;
+  document.querySelectorAll('.lrc-line').forEach((el,i)=>{
+    el.classList.toggle('active',i===idx);
+    if(i===idx)el.scrollIntoView({block:'center',behavior:'smooth'});
+  });
+}
+
+/* ─── SLEEP POPUP ─── */
+function openSlpPop(){document.getElementById('slpPop').classList.add('show');}
+function closeSlpPop(){document.getElementById('slpPop').classList.remove('show');}
+function setSlpPop(min,el){
+  document.querySelectorAll('.slp-box-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  // Ayarlar sayfasındaki butonlarla da senkronize et
+  document.querySelectorAll('.slp-btn').forEach((b,i)=>{
+    b.classList.toggle('on',[0,15,30,45,60,90][i]===min);
+  });
+  setSleep(min,document.querySelectorAll('.slp-btn')[[0,15,30,45,60,90].indexOf(min)]);
+}
+
+/* ─── SON POZİSYON KAYDET ─── */
+function savePos(){
+  if(queue[ci]&&aud.currentTime>2)
+    lsSet('mb4_pos',JSON.stringify({id:queue[ci].id,t:aud.currentTime}));
+}
+function restorePos(){
+  try{
+    const p=JSON.parse(lsGet('mb4_pos')||'null');
+    if(!p)return;
+    const idx=queue.findIndex(t=>t.id===p.id);
+    if(idx>=0&&p.t>2){ci=idx;playIdx(idx,false);setTimeout(()=>{aud.currentTime=p.t;},600);}
+  }catch{}
+}
+
+/* ─── QUOTA KONTROLÜ ─── */
+async function checkQuota(){
+  try{
+    if(!navigator.storage?.estimate)return;
+    const {usage,quota}=await navigator.storage.estimate();
+    const pct=usage/quota;
+    if(pct>0.9)showToast(`⚠️ Depolama %${Math.round(pct*100)} dolu!`);
+  }catch{}
+}
+
+/* ─── SW GÜNCELLEME ─── */
+let _swWaiting=null;
+function applySwUpdate(){
+  if(_swWaiting){_swWaiting.postMessage({type:'SKIP_WAITING'});}
+  window.location.reload();
 }
 
 /* ─── PWA ─── */
@@ -1753,9 +2014,19 @@ async function init(){
     document.documentElement.style.setProperty('--p2',cfg.theme);
     document.documentElement.style.setProperty('--p3',cfg.theme2||cfg.theme);
   }
+  if(cfg.lm){
+    document.documentElement.setAttribute('data-lm','');
+    const tog=document.getElementById('tog-lm');if(tog)tog.classList.add('on');
+  }
   buildSpec();startSpec();
   buildEQ();
   document.getElementById('volFill').style.width=(vol*100)+'%';
+
+  // modalOv dışına tıklayınca kapat
+  document.getElementById('modalOv').addEventListener('click',e=>{
+    if(e.target===document.getElementById('modalOv'))closeModal();
+  });
+
   const isPWA=window.navigator.standalone||window.matchMedia('(display-mode:standalone)').matches;
   if(isPWA||lsGet('mb4_pwa')){
     document.getElementById('pwaBanIOS').style.display='none';
@@ -1766,12 +2037,33 @@ async function init(){
     if(isIOS&&isSafari){
       document.getElementById('pwaBanIOS').style.display='flex';
     }
-    // Android/Chrome banner açılışı beforeinstallprompt event'i ile tetiklenir
   }
+
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            _swWaiting=nw;
+            document.getElementById('swUpdBan').classList.add('show');
+          }
+        });
+      });
+    }).catch(()=>{});
+    // Sayfayı yenile SW değişince
+    navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
   }
+
   await checkRestore();
+  await checkQuota();
+
+  // Manifest shortcut parametreleri
+  const urlP=new URLSearchParams(location.search);
+  const action=urlP.get('action');
+  if(action==='play'&&queue.length){togPP();}
+  else if(action==='shuffle'){shuf=true;document.getElementById('shuffleBtn')?.classList.add('on');if(queue.length)playIdx(Math.floor(Math.random()*queue.length));}
+  else{restorePos();}
 }
 
 init();
