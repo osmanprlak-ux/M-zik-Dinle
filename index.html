@@ -606,7 +606,7 @@ body{color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display
         <button class="pwa-x" onclick="hidePWA()">✕</button>
       </div>
 
-      <div class="r-ban" id="rBan">
+      <div class="r-ban" id="rBan" style="display:none">
         <div style="font-size:22px;flex-shrink:0">💾</div>
         <div class="rb-info">
           <div class="rb-title" id="rBanTitle">Kayıtlı müzikler bulundu</div>
@@ -1124,9 +1124,8 @@ async function checkRestore(){
   try{
     const metas = await dbGetAll('meta');
     if(!metas.length) return;
-    document.getElementById('rBanTitle').textContent = `${metas.length} şarkı kaydedilmiş`;
-    document.getElementById('rBan').classList.add('show');
     document.getElementById('cachedCnt').textContent = metas.length+'';
+    await doRestore(); // Otomatik geri yükle, banner gösterme
   }catch{}
 }
 
